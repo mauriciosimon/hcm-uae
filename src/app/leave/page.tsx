@@ -7,6 +7,7 @@ import StatsCard from '@/components/StatsCard';
 import LeaveBalanceCard from '@/components/LeaveBalanceCard';
 import LeaveRequestForm, { LeaveRequestFormData } from '@/components/LeaveRequestForm';
 import LeaveRequestCard from '@/components/LeaveRequestCard';
+import OnboardingTour from '@/components/OnboardingTour';
 import { mockEmployees } from '@/lib/data';
 import { mockLeaveRequests, calculateLeaveBalance, calculateBusinessDays } from '@/lib/leaveData';
 import { LeaveRequest, LeaveStatus } from '@/types/leave';
@@ -155,6 +156,7 @@ export default function LeavePage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-3">
                 <button
+                  data-tour="request-leave"
                   onClick={() => setShowRequestForm(true)}
                   className="btn btn-primary flex items-center gap-2"
                 >
@@ -163,7 +165,7 @@ export default function LeavePage() {
                 </button>
 
                 {/* View Toggle */}
-                <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                <div data-tour="leave-tabs" className="flex items-center bg-gray-100 rounded-lg p-1">
                   <button
                     onClick={() => setViewMode('my-leaves')}
                     className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
@@ -225,7 +227,7 @@ export default function LeavePage() {
           {/* Main Content */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Leave Balance Sidebar */}
-            <div className="lg:col-span-1">
+            <div data-tour="leave-balance" className="lg:col-span-1">
               <LeaveBalanceCard
                 balance={balance}
                 gender={selectedEmployee.personalInfo.gender}
@@ -233,7 +235,7 @@ export default function LeavePage() {
             </div>
 
             {/* Leave Requests */}
-            <div className="lg:col-span-2">
+            <div data-tour="leave-list" className="lg:col-span-2">
               <div className="bg-white rounded-xl border border-gray-200 p-4">
                 <h3 className="font-display font-semibold text-gray-900 mb-4">
                   {viewMode === 'my-leaves' ? 'My Leave Requests' : 'Team Leave Requests'}
@@ -338,6 +340,9 @@ export default function LeavePage() {
           gender={selectedEmployee.personalInfo.gender}
         />
       )}
+
+      {/* Onboarding Tour */}
+      <OnboardingTour tourKey="leave" />
     </div>
   );
 }

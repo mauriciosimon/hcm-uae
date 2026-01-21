@@ -1,13 +1,35 @@
 'use client';
 
-import { Bell, Search, User, ChevronDown } from 'lucide-react';
+import { Bell, Search, User, ChevronDown, HelpCircle } from 'lucide-react';
+import { useTour, TourStatus } from '@/contexts/TourContext';
+import { usePathname } from 'next/navigation';
 
 interface HeaderProps {
   title: string;
   subtitle?: string;
 }
 
+// Map pathname to tour key
+const pathToTourKey: Record<string, keyof TourStatus> = {
+  '/': 'employees',
+  '/leave': 'leave',
+  '/gratuity': 'gratuity',
+  '/overtime': 'overtime',
+  '/documents': 'documents',
+  '/payroll': 'payroll',
+  '/reports': 'reports',
+  '/settings': 'settings',
+};
+
 export default function Header({ title, subtitle }: HeaderProps) {
+  const { startTour } = useTour();
+  const pathname = usePathname();
+
+  const handleTakeTour = () => {
+    const tourKey = pathToTourKey[pathname] || 'employees';
+    startTour(tourKey);
+  };
+
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -28,6 +50,16 @@ export default function Header({ title, subtitle }: HeaderProps) {
               className="pl-10 pr-4 py-2 w-64 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
             />
           </div>
+
+          {/* Take a Tour Button */}
+          <button
+            onClick={handleTakeTour}
+            className="flex items-center gap-1.5 px-3 py-2 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors text-sm font-medium"
+            title="Take a Tour"
+          >
+            <HelpCircle size={18} />
+            <span className="hidden sm:inline">Tour</span>
+          </button>
 
           {/* Notifications */}
           <button className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">

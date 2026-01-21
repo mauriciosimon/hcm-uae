@@ -23,8 +23,14 @@ import {
   Shield,
   Download,
   ExternalLink,
+  HelpCircle,
+  RotateCcw,
+  Play,
 } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
+import OnboardingTour from '@/components/OnboardingTour';
+import { useTour } from '@/contexts/TourContext';
 import {
   CompanyProfile,
   User,
@@ -86,11 +92,10 @@ export default function SettingsPage() {
       <Sidebar />
 
       <main className="flex-1 ml-64">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-8 py-6">
-          <h1 className="text-2xl font-display font-bold text-gray-900">Settings</h1>
-          <p className="text-gray-600 mt-1">Manage your company settings and preferences</p>
-        </div>
+        <Header
+          title="Settings"
+          subtitle="Manage your company settings and preferences"
+        />
 
         <div className="p-8">
           <div className="flex gap-8">
@@ -101,6 +106,7 @@ export default function SettingsPage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
+                    data-tour={tab.id === 'company' ? 'company-profile' : tab.id === 'system' ? 'system-settings' : tab.id === 'notifications' ? 'notifications' : tab.id === 'users' ? 'user-management' : undefined}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
                       activeTab === tab.id
                         ? 'bg-teal-50 text-teal-700 font-medium'
@@ -172,6 +178,9 @@ export default function SettingsPage() {
           }}
         />
       )}
+
+      {/* Onboarding Tour */}
+      <OnboardingTour tourKey="settings" />
     </div>
   );
 }
@@ -949,11 +958,122 @@ function SystemSettingsTab({
         </div>
       </div>
 
+      <TourSettingsCard />
+
       <div className="flex justify-end">
         <button onClick={onSave} className="btn btn-primary flex items-center gap-2">
           <Save size={16} />
           Save Changes
         </button>
+      </div>
+    </div>
+  );
+}
+
+// Tour Settings Card
+function TourSettingsCard() {
+  const { resetAllTours, startTour, tourStatus } = useTour();
+  const [showConfirmReset, setShowConfirmReset] = useState(false);
+
+  const completedTours = Object.values(tourStatus).filter(Boolean).length;
+  const totalTours = Object.keys(tourStatus).length;
+
+  const handleResetAll = () => {
+    resetAllTours();
+    setShowConfirmReset(false);
+  };
+
+  return (
+    <div className="card p-6">
+      <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+        <HelpCircle size={20} />
+        Onboarding Tour
+      </h2>
+
+      <p className="text-gray-600 mb-4">
+        Take a guided tour to learn about all the features of HCM UAE.
+        You've completed {completedTours} of {totalTours} tours.
+      </p>
+
+      {/* Progress Bar */}
+      <div className="mb-6">
+        <div className="flex justify-between text-sm text-gray-500 mb-1">
+          <span>Tour Progress</span>
+          <span>{Math.round((completedTours / totalTours) * 100)}%</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div
+            className="bg-teal-600 h-2 rounded-full transition-all"
+            style={{ width: `${(completedTours / totalTours) * 100}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Tour Buttons */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+        {[
+          { key: 'employees', label: 'Employees', icon: '👥' },
+          { key: 'leave', label: 'Leave', icon: '🏖️' },
+          { key: 'gratuity', label: 'Gratuity', icon: '💰' },
+          { key: 'overtime', label: 'Overtime', icon: '⏰' },
+          { key: 'documents', label: 'Documents', icon: '📄' },
+          { key: 'payroll', label: 'Payroll', icon: '💳' },
+          { key: 'reports', label: 'Reports', icon: '📊' },
+          { key: 'settings', label: 'Settings', icon: '⚙️' },
+        ].map((tour) => (
+          <button
+            key={tour.key}
+            onClick={() => startTour(tour.key as any)}
+            className={`flex items-center gap-2 p-3 rounded-lg border transition-colors ${
+              tourStatus[tour.key as keyof typeof tourStatus]
+                ? 'bg-green-50 border-green-200 text-green-700'
+                : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            <span className="text-lg">{tour.icon}</span>
+            <span className="text-sm font-medium">{tour.label}</span>
+            {tourStatus[tour.key as keyof typeof tourStatus] && (
+              <Check size={14} className="ml-auto text-green-600" />
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-3">
+        <button
+          onClick={() => startTour('welcome')}
+          className="flex-1 btn btn-secondary flex items-center justify-center gap-2"
+        >
+          <Play size={16} />
+          Start Full Tour
+        </button>
+
+        {showConfirmReset ? (
+          <div className="flex gap-2">
+            <button
+              onClick={handleResetAll}
+              className="btn bg-red-600 text-white hover:bg-red-700 flex items-center gap-2"
+            >
+              <Check size={16} />
+              Confirm
+            </button>
+            <button
+              onClick={() => setShowConfirmReset(false)}
+              className="btn btn-secondary"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowConfirmReset(true)}
+            className="btn btn-secondary flex items-center gap-2"
+          >
+            <RotateCcw size={16} />
+            Reset Tours
+          </button>
+        )}
       </div>
     </div>
   );

@@ -41,7 +41,8 @@ export default function Sidebar() {
   const [activeItem, setActiveItem] = useState('Employees');
 
   return (
-    <aside 
+    <aside
+      data-tour="sidebar"
       className={`fixed left-0 top-0 h-screen bg-gradient-to-b from-teal-900 to-teal-950 text-white transition-all duration-300 z-50 ${
         collapsed ? 'w-20' : 'w-64'
       }`}

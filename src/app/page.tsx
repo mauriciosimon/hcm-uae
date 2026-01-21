@@ -7,18 +7,20 @@ import EmployeeCard from '@/components/EmployeeCard';
 import StatsCard from '@/components/StatsCard';
 import EmployeeDetailModal from '@/components/EmployeeDetailModal';
 import AddEmployeeForm from '@/components/AddEmployeeForm';
+import OnboardingTour from '@/components/OnboardingTour';
 import { mockEmployees, formatCurrency } from '@/lib/data';
 import { Employee } from '@/types/employee';
-import { 
-  Users, 
-  UserCheck, 
-  AlertTriangle, 
+import {
+  Users,
+  UserCheck,
+  AlertTriangle,
   DollarSign,
   Plus,
   Filter,
   Download,
   Grid3X3,
-  List
+  List,
+  Search
 } from 'lucide-react';
 
 export default function EmployeesPage() {
@@ -64,7 +66,7 @@ export default function EmployeesPage() {
 
         <div className="p-6">
           {/* Stats Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div data-tour="stats-cards" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <StatsCard
               title="Total Employees"
               value={totalEmployees}
@@ -96,7 +98,8 @@ export default function EmployeesPage() {
           <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-3">
-                <button 
+                <button
+                  data-tour="add-employee"
                   onClick={() => setShowAddForm(true)}
                   className="btn btn-primary flex items-center gap-2"
                 >
@@ -110,8 +113,18 @@ export default function EmployeesPage() {
               </div>
 
               <div className="flex items-center gap-3">
+                {/* Search Input */}
+                <div data-tour="employee-search" className="relative">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    className="pl-9 pr-3 py-2 w-40 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                  />
+                </div>
+
                 {/* Department Filter */}
-                <div className="flex items-center gap-2">
+                <div data-tour="department-filter" className="flex items-center gap-2">
                   <Filter size={16} className="text-gray-400" />
                   <select
                     value={filterDepartment}
@@ -127,7 +140,7 @@ export default function EmployeesPage() {
                 </div>
 
                 {/* View Toggle */}
-                <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                <div data-tour="view-toggle" className="flex items-center bg-gray-100 rounded-lg p-1">
                   <button
                     onClick={() => setViewMode('grid')}
                     className={`p-2 rounded-md transition-colors ${
@@ -153,7 +166,12 @@ export default function EmployeesPage() {
           {viewMode === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {filteredEmployees.map((employee, index) => (
-                <div key={employee.id} style={{ animationDelay: `${index * 50}ms` }} className="animate-fade-in">
+                <div
+                  key={employee.id}
+                  style={{ animationDelay: `${index * 50}ms` }}
+                  className="animate-fade-in"
+                  {...(index === 0 ? { 'data-tour': 'employee-card' } : {})}
+                >
                   <EmployeeCard
                     employee={employee}
                     onView={(emp) => setSelectedEmployee(emp)}
@@ -254,6 +272,10 @@ export default function EmployeesPage() {
           onSubmit={handleAddEmployee}
         />
       )}
+
+      {/* Onboarding Tours */}
+      <OnboardingTour tourKey="welcome" autoStart />
+      <OnboardingTour tourKey="employees" />
     </div>
   );
 }
