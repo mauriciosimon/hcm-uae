@@ -319,6 +319,8 @@ export async function getDocumentStatsByStatus(
     warning: 0,
     upcoming: 0,
     valid: 0,
+    expiring_soon: 0,
+    expiring: 0,
   };
 
   documents.forEach((doc) => {
