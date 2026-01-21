@@ -104,6 +104,24 @@ export const DOCUMENT_TYPES: Record<
     category: 'company',
     icon: '🏢',
   },
+  visa: {
+    label: 'Visa',
+    labelAr: 'تأشيرة',
+    category: 'employee',
+    icon: '📋',
+  },
+  health_insurance: {
+    label: 'Health Insurance',
+    labelAr: 'التأمين الصحي',
+    category: 'employee',
+    icon: '🏥',
+  },
+  driving_license: {
+    label: 'Driving License',
+    labelAr: 'رخصة القيادة',
+    category: 'employee',
+    icon: '🚗',
+  },
 };
 
 // Alert thresholds in days

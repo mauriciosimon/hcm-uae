@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-export default function GratuityPage() {
+function GratuityPageContent() {
   const searchParams = useSearchParams();
   const initialEmployeeId = searchParams.get('employee') || undefined;
 
@@ -253,5 +253,29 @@ export default function GratuityPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function GratuityPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen bg-stone-50">
+        <Sidebar />
+        <main className="flex-1 ml-64 transition-all duration-300">
+          <Header title="Gratuity Calculator" subtitle="Loading..." />
+          <div className="p-6">
+            <div className="animate-pulse">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-24 bg-gray-200 rounded-xl"></div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    }>
+      <GratuityPageContent />
+    </Suspense>
   );
 }
