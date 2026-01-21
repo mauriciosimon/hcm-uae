@@ -6,11 +6,14 @@ export type DocumentType =
   | 'employment_visa'
   | 'labor_card'
   | 'trade_license'
-  | 'establishment_card';
+  | 'establishment_card'
+  | 'visa'
+  | 'health_insurance'
+  | 'driving_license';
 
 export type DocumentCategory = 'employee' | 'company';
 
-export type ExpiryStatus = 'valid' | 'expiring_soon' | 'expiring' | 'urgent' | 'critical' | 'expired';
+export type ExpiryStatus = 'valid' | 'expiring_soon' | 'expiring' | 'urgent' | 'critical' | 'expired' | 'warning' | 'upcoming';
 
 export interface Document {
   id: string;
@@ -28,6 +31,24 @@ export interface Document {
   renewedDate?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+// Employee document with employee info
+export interface EmployeeDocument {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  employeeCode: string;
+  department: string;
+  documentType: DocumentType;
+  documentNumber: string;
+  issueDate: string;
+  expiryDate: string;
+  issuingAuthority: string;
+  status: ExpiryStatus;
+  daysRemaining: number;
+  fileUrl?: string;
+  notes?: string;
 }
 
 export interface DocumentAlert {

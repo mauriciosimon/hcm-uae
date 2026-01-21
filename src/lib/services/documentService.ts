@@ -18,13 +18,16 @@ function toFrontendDocumentType(type: DocumentType): FrontendDocumentType {
 }
 
 function toPrismaDocumentType(type: FrontendDocumentType): DocumentType {
-  const mapping: Record<FrontendDocumentType, DocumentType> = {
+  const mapping: Partial<Record<FrontendDocumentType, DocumentType>> = {
     passport: DocumentType.PASSPORT,
     emirates_id: DocumentType.EMIRATES_ID,
     visa: DocumentType.VISA,
     labor_card: DocumentType.LABOR_CARD,
     health_insurance: DocumentType.HEALTH_INSURANCE,
     driving_license: DocumentType.DRIVING_LICENSE,
+    trade_license: DocumentType.TRADE_LICENSE,
+    employment_visa: DocumentType.VISA,
+    establishment_card: DocumentType.OTHER,
   };
   return mapping[type] || DocumentType.OTHER;
 }
