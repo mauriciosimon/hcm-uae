@@ -53,12 +53,12 @@ export default function StatsCard({ title, value, change, icon, color, subtitle 
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5 card-hover">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col items-center md:flex-row md:items-start md:justify-between">
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${colors.icon}`}>
           {icon}
         </div>
         {change && (
-          <div className={`flex items-center gap-1 text-sm ${
+          <div className={`flex items-center gap-1 text-sm mt-2 md:mt-0 ${
             change.type === 'increase' ? 'text-emerald-600' : 'text-red-600'
           }`}>
             {change.type === 'increase' ? (
@@ -70,7 +70,7 @@ export default function StatsCard({ title, value, change, icon, color, subtitle 
           </div>
         )}
       </div>
-      <div className="mt-4">
+      <div className="mt-4 text-center md:text-left">
         <p className="text-sm text-gray-500">{title}</p>
         <p className={`font-display text-2xl font-bold mt-1 ${colors.text}`}>{value}</p>
         {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
