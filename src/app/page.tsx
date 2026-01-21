@@ -311,7 +311,7 @@ export default function DashboardPage() {
     <div className="flex min-h-screen bg-stone-50">
       <Sidebar />
 
-      <main className="flex-1 ml-64 transition-all duration-300">
+      <main className="flex-1 ml-0 md:ml-64 transition-all duration-300">
         <Header title="Dashboard" subtitle="Welcome to HCM UAE">
           <button
             data-tour="start-tour-btn"
@@ -526,7 +526,7 @@ export default function DashboardPage() {
             {/* Quick Links */}
             <div data-tour="dashboard-quicklinks" className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-4">
               <h3 className="font-semibold text-gray-900 mb-4">Quick Links</h3>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {quickLinks.map((link) => (
                   <Link
                     key={link.href}

@@ -130,7 +130,7 @@ export default function ReportsPage() {
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
 
-      <main className="flex-1 ml-64">
+      <main className="flex-1 ml-0 md:ml-64">
         {/* Header */}
         <div className="bg-white border-b border-gray-200 px-8 py-6">
           <div className="flex items-center justify-between mb-6">
@@ -173,9 +173,9 @@ export default function ReportsPage() {
 
         <div className="p-8">
           {activeTab === 'reports' ? (
-            <div className="grid grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               {/* Sidebar Filters */}
-              <div className="col-span-1 space-y-6">
+              <div className="lg:col-span-1 space-y-6">
                 {/* Search */}
                 <div className="card p-4">
                   <div className="relative">
@@ -309,7 +309,7 @@ export default function ReportsPage() {
               </div>
 
               {/* Reports Grid */}
-              <div className="col-span-3 space-y-6">
+              <div className="lg:col-span-3 space-y-6">
                 {selectedCategory === 'all' ? (
                   // Show grouped by category
                   (Object.keys(reportsByCategory) as ReportCategory[]).map((category) => (

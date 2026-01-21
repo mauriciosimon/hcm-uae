@@ -184,7 +184,7 @@ export default function DocumentsPage() {
     <div className="flex min-h-screen bg-stone-50">
       <Sidebar />
 
-      <main className="flex-1 ml-64 transition-all duration-300">
+      <main className="flex-1 ml-0 md:ml-64 transition-all duration-300">
         <Header
           title="Document Management"
           subtitle="Track document expiry and compliance status"

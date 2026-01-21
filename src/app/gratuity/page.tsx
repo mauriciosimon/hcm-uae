@@ -70,7 +70,7 @@ function GratuityPageContent() {
     <div className="flex min-h-screen bg-stone-50">
       <Sidebar />
 
-      <main className="flex-1 ml-64 transition-all duration-300">
+      <main className="flex-1 ml-0 md:ml-64 transition-all duration-300">
         <Header
           title="Gratuity Calculator"
           subtitle="End of Service Benefits - UAE Federal Decree-Law No. 33/2021"
@@ -261,7 +261,7 @@ export default function GratuityPage() {
     <Suspense fallback={
       <div className="flex min-h-screen bg-stone-50">
         <Sidebar />
-        <main className="flex-1 ml-64 transition-all duration-300">
+        <main className="flex-1 ml-0 md:ml-64 transition-all duration-300">
           <Header title="Gratuity Calculator" subtitle="Loading..." />
           <div className="p-6">
             <div className="animate-pulse">

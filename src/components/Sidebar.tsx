@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useSidebar } from '@/contexts/SidebarContext';
 import {
   Users,
   Calendar,
@@ -14,8 +15,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Building2,
-  Bell,
-  Menu,
   Home
 } from 'lucide-react';
 
@@ -41,14 +40,29 @@ const navigation: NavItem[] = [
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [activeItem, setActiveItem] = useState('Dashboard');
+  const { isOpen, close } = useSidebar();
+
+  const handleNavClick = (name: string) => {
+    setActiveItem(name);
+    close(); // Close sidebar on mobile after navigation
+  };
 
   return (
-    <aside
-      data-tour="sidebar"
-      className={`fixed left-0 top-0 h-screen bg-gradient-to-b from-teal-900 to-teal-950 text-white transition-all duration-300 z-50 ${
-        collapsed ? 'w-20' : 'w-64'
-      }`}
-    >
+    <>
+      {/* Mobile overlay backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={close}
+        />
+      )}
+
+      <aside
+        data-tour="sidebar"
+        className={`fixed left-0 top-0 h-screen bg-gradient-to-b from-teal-900 to-teal-950 text-white transition-all duration-300 z-50 ${
+          collapsed ? 'w-20' : 'w-64'
+        } ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
+      >
       {/* Logo */}
       <div className="flex items-center justify-between p-4 border-b border-teal-800">
         <div className={`flex items-center gap-3 ${collapsed ? 'justify-center w-full' : ''}`}>
@@ -70,7 +84,7 @@ export default function Sidebar() {
           <Link
             key={item.name}
             href={item.href}
-            onClick={() => setActiveItem(item.name)}
+            onClick={() => handleNavClick(item.name)}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group relative ${
               activeItem === item.name
                 ? 'bg-white/15 text-white shadow-md'
@@ -97,13 +111,14 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Collapse Button */}
+      {/* Collapse Button - hidden on mobile */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-teal-800 hover:bg-teal-700 rounded-full flex items-center justify-center transition-colors"
+        className="absolute bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-teal-800 hover:bg-teal-700 rounded-full hidden md:flex items-center justify-center transition-colors"
       >
         {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
       </button>
     </aside>
+    </>
   );
 }

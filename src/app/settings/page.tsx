@@ -90,30 +90,30 @@ export default function SettingsPage() {
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
 
-      <main className="flex-1 ml-64">
+      <main className="flex-1 ml-0 md:ml-64">
         <Header
           title="Settings"
           subtitle="Manage your company settings and preferences"
         />
 
-        <div className="p-8">
-          <div className="flex gap-8">
-            {/* Sidebar Navigation */}
-            <div className="w-64 flex-shrink-0">
-              <nav className="space-y-1">
+        <div className="p-4 md:p-8">
+          <div className="flex flex-col md:flex-row gap-4 md:gap-8">
+            {/* Sidebar Navigation - horizontal scroll on mobile, vertical on desktop */}
+            <div className="w-full md:w-64 flex-shrink-0">
+              <nav className="flex md:flex-col gap-2 md:gap-1 overflow-x-auto pb-2 md:pb-0">
                 {TABS.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     data-tour={tab.id === 'company' ? 'company-profile' : tab.id === 'system' ? 'system-settings' : tab.id === 'notifications' ? 'notifications' : tab.id === 'users' ? 'user-management' : undefined}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                    className={`flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 rounded-lg text-left transition-colors whitespace-nowrap text-sm md:text-base ${
                       activeTab === tab.id
                         ? 'bg-teal-50 text-teal-700 font-medium'
                         : 'text-gray-600 hover:bg-gray-100'
                     }`}
                   >
                     {tab.icon}
-                    {tab.label}
+                    <span className="hidden sm:inline md:inline">{tab.label}</span>
                   </button>
                 ))}
               </nav>
