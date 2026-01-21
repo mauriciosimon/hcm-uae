@@ -7,6 +7,7 @@ export type LeaveStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
 export interface LeaveRequest {
   id: string;
   employeeId: string;
+  employeeName?: string;
   leaveType: LeaveType;
   startDate: string;
   endDate: string;
