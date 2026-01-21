@@ -29,10 +29,38 @@ function calculateDaysRemaining(expiryDate: Date | null): number {
   );
 }
 
-// GET /api/documents - Get documents
+// GET /api/documents - Get documents or stats
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    const getStats = searchParams.get('stats');
+
+    // Return stats if requested
+    if (getStats === 'true') {
+      const documents = await prisma.document.findMany({
+        where: { companyId: DEFAULT_COMPANY_ID },
+        select: { expiryDate: true },
+      });
+
+      const stats = {
+        expired: 0,
+        critical: 0,
+        urgent: 0,
+        warning: 0,
+        upcoming: 0,
+        valid: 0,
+      };
+
+      documents.forEach((doc) => {
+        const status = calculateExpiryStatus(doc.expiryDate) as keyof typeof stats;
+        if (stats[status] !== undefined) {
+          stats[status]++;
+        }
+      });
+
+      return NextResponse.json(stats);
+    }
+
     const employeeId = searchParams.get('employeeId');
     const documentType = searchParams.get('documentType');
     const expiryStatus = searchParams.get('expiryStatus');
@@ -186,28 +214,3 @@ export async function DELETE(request: NextRequest) {
   }
 }
 
-// GET /api/documents/stats - Get document statistics
-export async function getDocumentStats() {
-  const documents = await prisma.document.findMany({
-    where: { companyId: DEFAULT_COMPANY_ID },
-    select: { expiryDate: true },
-  });
-
-  const stats = {
-    expired: 0,
-    critical: 0,
-    urgent: 0,
-    warning: 0,
-    upcoming: 0,
-    valid: 0,
-  };
-
-  documents.forEach((doc) => {
-    const status = calculateExpiryStatus(doc.expiryDate) as keyof typeof stats;
-    if (stats[status] !== undefined) {
-      stats[status]++;
-    }
-  });
-
-  return stats;
-}
