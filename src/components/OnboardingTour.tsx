@@ -5,6 +5,27 @@ import { useRouter, usePathname } from 'next/navigation';
 import Joyride, { Step, CallBackProps, STATUS, EVENTS, ACTIONS } from 'react-joyride';
 import { useTour } from '@/contexts/TourContext';
 
+// Finish step content component with button
+function FinishStepContent({ onFinish }: { onFinish: () => void }) {
+  return (
+    <div className="text-center">
+      <div className="text-4xl mb-3">You're All Set!</div>
+      <p className="text-gray-600">
+        You've completed the tour of HCM UAE. You now know how to manage employees, track leave, calculate gratuity, and more.
+      </p>
+      <p className="text-sm text-gray-500 mt-2 mb-4">
+        Click the <strong>Tour</strong> button in the header anytime to restart this tour.
+      </p>
+      <button
+        onClick={onFinish}
+        className="px-6 py-2.5 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 transition-colors"
+      >
+        Finish Tour
+      </button>
+    </div>
+  );
+}
+
 // Complete unified tour steps that flow through all modules
 const UNIFIED_TOUR_STEPS: (Step & { path?: string })[] = [
   // Welcome
@@ -440,22 +461,13 @@ const UNIFIED_TOUR_STEPS: (Step & { path?: string })[] = [
     path: '/settings',
   },
 
-  // Finish
+  // Finish - placeholder, will be replaced with dynamic content
   {
     target: 'body',
-    content: (
-      <div className="text-center">
-        <div className="text-4xl mb-3">You're All Set!</div>
-        <p className="text-gray-600">
-          You've completed the tour of HCM UAE. You now know how to manage employees, track leave, calculate gratuity, and more.
-        </p>
-        <p className="text-sm text-gray-500 mt-2">
-          Click the <strong>Tour</strong> button in the header anytime to restart this tour.
-        </p>
-      </div>
-    ),
+    content: 'FINISH_STEP_PLACEHOLDER',
     placement: 'center',
     path: '/settings',
+    hideFooter: true,
   },
 ];
 
@@ -466,6 +478,15 @@ export default function OnboardingTour() {
   const [run, setRun] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [isNavigating, setIsNavigating] = useState(false);
+
+  // Handler to finish the tour
+  const handleFinishTour = useCallback(() => {
+    setRun(false);
+    setStepIndex(0);
+    setIsTourActive(false);
+    completeTour('welcome');
+    router.push('/');
+  }, [setIsTourActive, completeTour, router]);
 
   // Start tour when activated
   useEffect(() => {
@@ -535,7 +556,16 @@ export default function OnboardingTour() {
   if (!isTourActive) return null;
 
   // Get steps for current path (filter out path property for Joyride)
-  const steps: Step[] = UNIFIED_TOUR_STEPS.map(({ path, ...step }) => step);
+  // Replace the finish step placeholder with actual content
+  const steps: Step[] = UNIFIED_TOUR_STEPS.map(({ path, ...step }, index) => {
+    if (index === UNIFIED_TOUR_STEPS.length - 1) {
+      return {
+        ...step,
+        content: <FinishStepContent onFinish={handleFinishTour} />,
+      };
+    }
+    return step;
+  });
 
   return (
     <Joyride
