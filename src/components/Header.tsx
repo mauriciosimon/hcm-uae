@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Search, User, ChevronDown, HelpCircle } from 'lucide-react';
+import { Search, User, ChevronDown, HelpCircle } from 'lucide-react';
 import { useTour, TourStatus } from '@/contexts/TourContext';
 import { usePathname } from 'next/navigation';
 
@@ -64,12 +64,6 @@ export default function Header({ title, subtitle, children }: HeaderProps) {
           >
             <HelpCircle size={18} />
             <span className="hidden sm:inline">Tour</span>
-          </button>
-
-          {/* Notifications */}
-          <button className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-            <Bell size={20} />
-            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
           </button>
 
           {/* User Menu */}
