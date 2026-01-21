@@ -1,6 +1,19 @@
 import prisma from '@/lib/db';
-import { LeaveRequest, LeaveBalance, LeaveType as FrontendLeaveType } from '@/types/leave';
+import { LeaveRequest, LeaveType as FrontendLeaveType } from '@/types/leave';
 import { LeaveType, LeaveStatus } from '@prisma/client';
+
+// Simplified leave balance for API responses
+export interface SimpleLeaveBalance {
+  id: string;
+  employeeId: string;
+  leaveType: FrontendLeaveType;
+  year: number;
+  entitled: number;
+  used: number;
+  pending: number;
+  remaining: number;
+  carriedOver: number;
+}
 
 // Map Prisma LeaveType to Frontend LeaveType
 function toFrontendLeaveType(type: LeaveType): FrontendLeaveType {
@@ -23,7 +36,7 @@ export async function getLeaveBalances(
   companyId: string,
   employeeId?: string,
   year?: number
-): Promise<LeaveBalance[]> {
+): Promise<SimpleLeaveBalance[]> {
   const currentYear = year || new Date().getFullYear();
 
   const balances = await prisma.leaveBalance.findMany({
