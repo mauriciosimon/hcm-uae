@@ -497,8 +497,8 @@ export default function DashboardPage() {
             {/* Leave Utilization */}
             <div className="bg-white rounded-xl border border-gray-200 p-4">
               <h3 className="font-semibold text-gray-900 mb-4">Leave Utilization (This Month)</h3>
-              <ResponsiveContainer width="100%" height={200}>
-                {chartData.leaveData.length > 0 ? (
+              {chartData.leaveData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={200}>
                   <BarChart data={chartData.leaveData} layout="vertical">
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis type="number" tick={{ fontSize: 12 }} stroke="#9ca3af" />
@@ -512,12 +512,12 @@ export default function DashboardPage() {
                     <Tooltip formatter={(value) => [`${value} days`, 'Days']} contentStyle={{ fontSize: 12 }} />
                     <Bar dataKey="days" fill="#3b82f6" radius={[0, 4, 4, 0]} />
                   </BarChart>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-gray-400 text-sm">
-                    No leave data this month
-                  </div>
-                )}
-              </ResponsiveContainer>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-[200px] text-gray-400 text-sm">
+                  No leave data this month
+                </div>
+              )}
             </div>
           </div>
 
