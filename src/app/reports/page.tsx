@@ -64,7 +64,7 @@ export default function ReportsPage() {
   const [recentReports, setRecentReports] = useState<GeneratedReport[]>([]);
 
   // Get unique departments
-  const departments = [...new Set(mockEmployees.map((e) => e.employmentInfo.department))];
+  const departments = Array.from(new Set(mockEmployees.map((e) => e.employmentInfo.department)));
 
   // Filter reports by category and search
   const filteredReports = REPORT_CONFIGS.filter((report) => {
