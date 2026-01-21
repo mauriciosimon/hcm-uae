@@ -156,6 +156,18 @@ export const EXPIRY_STATUS_CONFIG: Record<
     textColor: 'text-gray-700',
     borderColor: 'border-gray-300',
   },
+  warning: {
+    label: 'Warning',
+    bgColor: 'bg-amber-100',
+    textColor: 'text-amber-700',
+    borderColor: 'border-amber-200',
+  },
+  upcoming: {
+    label: 'Upcoming',
+    bgColor: 'bg-blue-100',
+    textColor: 'text-blue-700',
+    borderColor: 'border-blue-200',
+  },
 };
 
 // Color classes for progress/visual indicators
@@ -166,4 +178,6 @@ export const EXPIRY_COLORS = {
   urgent: 'bg-orange-500',      // 7-30 days
   critical: 'bg-red-500',       // <7 days
   expired: 'bg-gray-500',       // Expired
+  warning: 'bg-amber-500',      // 30-60 days (same as expiring)
+  upcoming: 'bg-blue-500',      // 60-90 days
 } as const;
