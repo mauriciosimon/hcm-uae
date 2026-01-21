@@ -11,7 +11,8 @@ interface StatsCardProps {
     type: 'increase' | 'decrease';
   };
   icon: ReactNode;
-  color: 'teal' | 'amber' | 'emerald' | 'red' | 'blue';
+  color: 'teal' | 'amber' | 'emerald' | 'red' | 'blue' | 'purple';
+  subtitle?: string;
 }
 
 const colorClasses = {
@@ -40,9 +41,14 @@ const colorClasses = {
     icon: 'bg-blue-100 text-blue-600',
     text: 'text-blue-600',
   },
+  purple: {
+    bg: 'bg-purple-50',
+    icon: 'bg-purple-100 text-purple-600',
+    text: 'text-purple-600',
+  },
 };
 
-export default function StatsCard({ title, value, change, icon, color }: StatsCardProps) {
+export default function StatsCard({ title, value, change, icon, color, subtitle }: StatsCardProps) {
   const colors = colorClasses[color];
 
   return (
@@ -67,6 +73,7 @@ export default function StatsCard({ title, value, change, icon, color }: StatsCa
       <div className="mt-4">
         <p className="text-sm text-gray-500">{title}</p>
         <p className={`font-display text-2xl font-bold mt-1 ${colors.text}`}>{value}</p>
+        {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
       </div>
     </div>
   );

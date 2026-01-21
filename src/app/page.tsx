@@ -1,281 +1,621 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo } from 'react';
+import Link from 'next/link';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
-import EmployeeCard from '@/components/EmployeeCard';
 import StatsCard from '@/components/StatsCard';
-import EmployeeDetailModal from '@/components/EmployeeDetailModal';
-import AddEmployeeForm from '@/components/AddEmployeeForm';
-import OnboardingTour from '@/components/OnboardingTour';
-import { mockEmployees, formatCurrency } from '@/lib/data';
-import { Employee } from '@/types/employee';
+import { useTour } from '@/contexts/TourContext';
+import { mockEmployees, formatCurrency, calculateYearsOfService } from '@/lib/data';
+import { mockLeaveRequests } from '@/lib/leaveData';
+import { mockOvertimeEntries, calculateMonthlySummary } from '@/lib/overtimeCalculator';
+import { calculateGratuity } from '@/lib/gratuityCalculator';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from 'recharts';
 import {
   Users,
-  UserCheck,
-  AlertTriangle,
+  Clock,
+  FileText,
   DollarSign,
-  Plus,
-  Filter,
-  Download,
-  Grid3X3,
-  List,
-  Search
+  Award,
+  Timer,
+  Calendar,
+  Settings,
+  FileSpreadsheet,
+  BarChart3,
+  AlertTriangle,
+  ChevronRight,
+  Play,
+  Cake,
+  Briefcase,
+  UserCheck,
+  Home,
 } from 'lucide-react';
 
-export default function EmployeesPage() {
-  const [employees, setEmployees] = useState<Employee[]>(mockEmployees);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [filterDepartment, setFilterDepartment] = useState<string>('all');
+// Color palette for charts
+const CHART_COLORS = ['#0d9488', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899', '#10b981'];
 
-  // Calculate stats
-  const totalEmployees = employees.length;
-  const activeEmployees = employees.filter(e => e.employmentInfo.employmentStatus === 'active').length;
-  const expiringDocs = employees.filter(e => {
-    const visaExpiry = e.documents.visaExpiry ? new Date(e.documents.visaExpiry) : null;
+export default function DashboardPage() {
+  const { setIsTourActive } = useTour();
+
+  // Calculate key metrics
+  const metrics = useMemo(() => {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+    // Active employees
+    const activeEmployees = mockEmployees.filter(
+      (e) => e.employmentInfo.employmentStatus === 'active'
+    ).length;
+
+    // Pending leave requests
+    const pendingLeaveRequests = mockLeaveRequests.filter(
+      (r) => r.status === 'pending'
+    ).length;
+
+    // Expiring documents (next 30 days)
+    const expiringDocuments = mockEmployees.filter((e) => {
+      const visaExpiry = e.documents.visaExpiry ? new Date(e.documents.visaExpiry) : null;
+      const passportExpiry = e.documents.passportExpiry ? new Date(e.documents.passportExpiry) : null;
+      const emiratesIdExpiry = e.documents.emiratesIdExpiry ? new Date(e.documents.emiratesIdExpiry) : null;
+      return (
+        (visaExpiry && visaExpiry <= thirtyDaysFromNow && visaExpiry >= today) ||
+        (passportExpiry && passportExpiry <= thirtyDaysFromNow && passportExpiry >= today) ||
+        (emiratesIdExpiry && emiratesIdExpiry <= thirtyDaysFromNow && emiratesIdExpiry >= today)
+      );
+    }).length;
+
+    // Monthly payroll
+    const monthlyPayroll = mockEmployees
+      .filter((e) => e.employmentInfo.employmentStatus === 'active')
+      .reduce((sum, e) => sum + e.compensation.totalPackage, 0);
+
+    // Total gratuity liability
+    const gratuityLiability = mockEmployees
+      .filter((e) => calculateYearsOfService(e.employmentInfo.employmentStartDate) >= 1)
+      .reduce((sum, e) => {
+        const result = calculateGratuity({
+          basicSalary: e.compensation.basicSalary,
+          employmentStartDate: e.employmentInfo.employmentStartDate,
+          employmentEndDate: new Date().toISOString().split('T')[0],
+          contractType: e.employmentInfo.contractType,
+          terminationType: 'termination',
+          unpaidLeaveDays: 0,
+        });
+        return sum + result.cappedGratuity;
+      }, 0);
+
+    // Overtime this month
+    const overtimeThisMonth = mockOvertimeEntries.filter((entry) => {
+      const entryDate = new Date(entry.date);
+      return (
+        entryDate.getMonth() === currentMonth && entryDate.getFullYear() === currentYear
+      );
+    });
+    const overtimeHours = overtimeThisMonth.reduce((sum, e) => sum + e.hours, 0);
+    const overtimeCost = overtimeThisMonth.reduce((sum, e) => sum + e.amount, 0);
+
+    return {
+      activeEmployees,
+      pendingLeaveRequests,
+      expiringDocuments,
+      monthlyPayroll,
+      gratuityLiability,
+      overtimeHours,
+      overtimeCost,
+    };
+  }, []);
+
+  // Alerts data
+  const alerts = useMemo(() => {
     const today = new Date();
     const thirtyDaysFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
-    return visaExpiry && visaExpiry <= thirtyDaysFromNow;
-  }).length;
-  const totalPayroll = employees.reduce((sum, e) => sum + e.compensation.totalPackage, 0);
+    const sixtyDaysFromNow = new Date(today.getTime() + 60 * 24 * 60 * 60 * 1000);
+    const ninetyDaysFromNow = new Date(today.getTime() + 90 * 24 * 60 * 60 * 1000);
 
-  // Get unique departments
-  const departments = ['all', ...Array.from(new Set(employees.map(e => e.employmentInfo.department)))];
+    // Expiring documents
+    const expiringDocs: { employee: string; document: string; expiryDate: string; daysLeft: number; urgency: 'critical' | 'urgent' | 'warning' }[] = [];
+    mockEmployees.forEach((emp) => {
+      const docs = [
+        { type: 'Visa', date: emp.documents.visaExpiry },
+        { type: 'Passport', date: emp.documents.passportExpiry },
+        { type: 'Emirates ID', date: emp.documents.emiratesIdExpiry },
+      ];
+      docs.forEach((doc) => {
+        if (doc.date) {
+          const expiry = new Date(doc.date);
+          if (expiry <= ninetyDaysFromNow && expiry >= today) {
+            const daysLeft = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+            let urgency: 'critical' | 'urgent' | 'warning' = 'warning';
+            if (daysLeft <= 30) urgency = 'critical';
+            else if (daysLeft <= 60) urgency = 'urgent';
+            expiringDocs.push({
+              employee: `${emp.personalInfo.firstName} ${emp.personalInfo.lastName}`,
+              document: doc.type,
+              expiryDate: doc.date,
+              daysLeft,
+              urgency,
+            });
+          }
+        }
+      });
+    });
+    expiringDocs.sort((a, b) => a.daysLeft - b.daysLeft);
 
-  // Filter employees
-  const filteredEmployees = filterDepartment === 'all' 
-    ? employees 
-    : employees.filter(e => e.employmentInfo.department === filterDepartment);
+    // Pending leave requests
+    const pendingLeaves = mockLeaveRequests
+      .filter((r) => r.status === 'pending')
+      .map((r) => {
+        const emp = mockEmployees.find((e) => e.id === r.employeeId);
+        return {
+          employee: emp ? `${emp.personalInfo.firstName} ${emp.personalInfo.lastName}` : 'Unknown',
+          type: r.leaveType,
+          dates: `${new Date(r.startDate).toLocaleDateString('en-AE', { day: 'numeric', month: 'short' })} - ${new Date(r.endDate).toLocaleDateString('en-AE', { day: 'numeric', month: 'short' })}`,
+          days: r.totalDays,
+        };
+      });
 
-  const handleAddEmployee = (data: any) => {
-    console.log('New employee data:', data);
-    setShowAddForm(false);
+    // Employees on leave today
+    const onLeaveToday = mockLeaveRequests
+      .filter((r) => {
+        const start = new Date(r.startDate);
+        const end = new Date(r.endDate);
+        return r.status === 'approved' && today >= start && today <= end;
+      })
+      .map((r) => {
+        const emp = mockEmployees.find((e) => e.id === r.employeeId);
+        return {
+          employee: emp ? `${emp.personalInfo.firstName} ${emp.personalInfo.lastName}` : 'Unknown',
+          type: r.leaveType,
+          returnDate: r.endDate,
+        };
+      });
+
+    // Probation endings (within 30 days)
+    const probationEndings = mockEmployees
+      .filter((emp) => {
+        if (emp.employmentInfo.probationEndDate) {
+          const probEnd = new Date(emp.employmentInfo.probationEndDate);
+          return probEnd >= today && probEnd <= thirtyDaysFromNow;
+        }
+        return false;
+      })
+      .map((emp) => ({
+        employee: `${emp.personalInfo.firstName} ${emp.personalInfo.lastName}`,
+        endDate: emp.employmentInfo.probationEndDate!,
+        daysLeft: Math.ceil((new Date(emp.employmentInfo.probationEndDate!).getTime() - today.getTime()) / (1000 * 60 * 60 * 24)),
+      }));
+
+    // Birthdays this week
+    const weekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const birthdaysThisWeek = mockEmployees
+      .filter((emp) => {
+        const dob = new Date(emp.personalInfo.dateOfBirth);
+        const birthdayThisYear = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
+        return birthdayThisYear >= today && birthdayThisYear <= weekFromNow;
+      })
+      .map((emp) => {
+        const dob = new Date(emp.personalInfo.dateOfBirth);
+        const birthdayThisYear = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
+        return {
+          employee: `${emp.personalInfo.firstName} ${emp.personalInfo.lastName}`,
+          date: birthdayThisYear.toLocaleDateString('en-AE', { weekday: 'short', month: 'short', day: 'numeric' }),
+        };
+      });
+
+    return {
+      expiringDocs: expiringDocs.slice(0, 5),
+      pendingLeaves: pendingLeaves.slice(0, 5),
+      onLeaveToday,
+      probationEndings: probationEndings.slice(0, 5),
+      birthdaysThisWeek,
+    };
+  }, []);
+
+  // Chart data
+  const chartData = useMemo(() => {
+    // Headcount by department
+    const deptCount: Record<string, number> = {};
+    mockEmployees.forEach((emp) => {
+      const dept = emp.employmentInfo.department;
+      deptCount[dept] = (deptCount[dept] || 0) + 1;
+    });
+    const departmentData = Object.entries(deptCount).map(([name, value]) => ({
+      name,
+      value,
+    }));
+
+    // Payroll trend (last 6 months - simulated)
+    const payrollTrend = [];
+    const monthlyBase = mockEmployees
+      .filter((e) => e.employmentInfo.employmentStatus === 'active')
+      .reduce((sum, e) => sum + e.compensation.totalPackage, 0);
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const variance = 0.95 + Math.random() * 0.1; // +/- 5% variance
+      payrollTrend.push({
+        month: date.toLocaleDateString('en-AE', { month: 'short' }),
+        amount: Math.round(monthlyBase * variance),
+      });
+    }
+
+    // Leave utilization this month (by type)
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const leaveByType: Record<string, number> = {};
+    mockLeaveRequests
+      .filter((r) => {
+        const start = new Date(r.startDate);
+        return (
+          r.status === 'approved' &&
+          start.getMonth() === currentMonth &&
+          start.getFullYear() === currentYear
+        );
+      })
+      .forEach((r) => {
+        const type = r.leaveType.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+        leaveByType[type] = (leaveByType[type] || 0) + r.totalDays;
+      });
+    const leaveData = Object.entries(leaveByType).map(([name, days]) => ({
+      name,
+      days,
+    }));
+
+    return { departmentData, payrollTrend, leaveData };
+  }, []);
+
+  // Quick links configuration
+  const quickLinks = [
+    { href: '/employees', icon: Users, label: 'Employees', color: 'bg-teal-500' },
+    { href: '/leave', icon: Calendar, label: 'Leave', color: 'bg-blue-500' },
+    { href: '/gratuity', icon: Award, label: 'Gratuity', color: 'bg-amber-500' },
+    { href: '/overtime', icon: Timer, label: 'Overtime', color: 'bg-purple-500' },
+    { href: '/documents', icon: FileText, label: 'Documents', color: 'bg-rose-500' },
+    { href: '/payroll', icon: DollarSign, label: 'Payroll', color: 'bg-emerald-500' },
+    { href: '/reports', icon: BarChart3, label: 'Reports', color: 'bg-indigo-500' },
+    { href: '/settings', icon: Settings, label: 'Settings', color: 'bg-gray-500' },
+  ];
+
+  const handleStartTour = () => {
+    setIsTourActive(true);
+  };
+
+  const getUrgencyColor = (urgency: 'critical' | 'urgent' | 'warning') => {
+    switch (urgency) {
+      case 'critical':
+        return 'bg-red-100 text-red-700 border-red-200';
+      case 'urgent':
+        return 'bg-orange-100 text-orange-700 border-orange-200';
+      case 'warning':
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+    }
   };
 
   return (
     <div className="flex min-h-screen bg-stone-50">
       <Sidebar />
-      
+
       <main className="flex-1 ml-64 transition-all duration-300">
-        <Header 
-          title="Employee Management" 
-          subtitle={`${totalEmployees} employees in your organization`}
-        />
+        <Header title="Dashboard" subtitle="Welcome to HCM UAE">
+          <button
+            data-tour="start-tour-btn"
+            onClick={handleStartTour}
+            className="btn btn-secondary flex items-center gap-2"
+          >
+            <Play size={16} />
+            Start Tour
+          </button>
+        </Header>
 
         <div className="p-6">
-          {/* Stats Row */}
-          <div data-tour="stats-cards" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <StatsCard
-              title="Total Employees"
-              value={totalEmployees}
-              icon={<Users size={24} />}
-              color="teal"
-              change={{ value: 12, type: 'increase' }}
-            />
+          {/* Key Metrics Row */}
+          <div data-tour="dashboard-metrics" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
             <StatsCard
               title="Active Employees"
-              value={activeEmployees}
-              icon={<UserCheck size={24} />}
-              color="emerald"
+              value={metrics.activeEmployees}
+              icon={<Users size={24} />}
+              color="teal"
             />
             <StatsCard
-              title="Expiring Documents"
-              value={expiringDocs}
-              icon={<AlertTriangle size={24} />}
+              title="Pending Leaves"
+              value={metrics.pendingLeaveRequests}
+              icon={<Clock size={24} />}
               color="amber"
             />
             <StatsCard
+              title="Expiring Docs"
+              value={metrics.expiringDocuments}
+              icon={<FileText size={24} />}
+              color="red"
+            />
+            <StatsCard
               title="Monthly Payroll"
-              value={formatCurrency(totalPayroll)}
+              value={formatCurrency(metrics.monthlyPayroll)}
               icon={<DollarSign size={24} />}
+              color="emerald"
+            />
+            <StatsCard
+              title="Gratuity Liability"
+              value={formatCurrency(metrics.gratuityLiability)}
+              icon={<Award size={24} />}
               color="blue"
+            />
+            <StatsCard
+              title="OT This Month"
+              value={`${metrics.overtimeHours.toFixed(1)}h`}
+              icon={<Timer size={24} />}
+              color="purple"
+              subtitle={formatCurrency(metrics.overtimeCost)}
             />
           </div>
 
-          {/* Actions Bar */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <button
-                  data-tour="add-employee"
-                  onClick={() => setShowAddForm(true)}
-                  className="btn btn-primary flex items-center gap-2"
-                >
-                  <Plus size={18} />
-                  Add Employee
-                </button>
-                <button className="btn btn-secondary flex items-center gap-2">
-                  <Download size={18} />
-                  Export
-                </button>
+          {/* Alerts Section */}
+          <div data-tour="dashboard-alerts" className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {/* Document Expiry Alerts */}
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                  <AlertTriangle size={18} className="text-amber-500" />
+                  Expiring Documents
+                </h3>
+                <Link href="/documents" className="text-sm text-teal-600 hover:text-teal-700 flex items-center gap-1">
+                  View All <ChevronRight size={14} />
+                </Link>
               </div>
+              <div className="divide-y divide-gray-50">
+                {alerts.expiringDocs.length > 0 ? (
+                  alerts.expiringDocs.map((doc, idx) => (
+                    <div key={idx} className="px-4 py-3 flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-gray-900 text-sm">{doc.employee}</p>
+                        <p className="text-xs text-gray-500">{doc.document}</p>
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getUrgencyColor(doc.urgency)}`}>
+                        {doc.daysLeft} days left
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-4 py-8 text-center text-gray-500 text-sm">
+                    No documents expiring soon
+                  </div>
+                )}
+              </div>
+            </div>
 
-              <div className="flex items-center gap-3">
-                {/* Search Input */}
-                <div data-tour="employee-search" className="relative">
-                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    className="pl-9 pr-3 py-2 w-40 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  />
-                </div>
-
-                {/* Department Filter */}
-                <div data-tour="department-filter" className="flex items-center gap-2">
-                  <Filter size={16} className="text-gray-400" />
-                  <select
-                    value={filterDepartment}
-                    onChange={(e) => setFilterDepartment(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  >
-                    {departments.map(dept => (
-                      <option key={dept} value={dept}>
-                        {dept === 'all' ? 'All Departments' : dept}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* View Toggle */}
-                <div data-tour="view-toggle" className="flex items-center bg-gray-100 rounded-lg p-1">
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`p-2 rounded-md transition-colors ${
-                      viewMode === 'grid' ? 'bg-white shadow text-teal-600' : 'text-gray-500'
-                    }`}
-                  >
-                    <Grid3X3 size={18} />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-2 rounded-md transition-colors ${
-                      viewMode === 'list' ? 'bg-white shadow text-teal-600' : 'text-gray-500'
-                    }`}
-                  >
-                    <List size={18} />
-                  </button>
-                </div>
+            {/* Pending Leave Requests */}
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                  <Calendar size={18} className="text-blue-500" />
+                  Pending Leave Requests
+                </h3>
+                <Link href="/leave" className="text-sm text-teal-600 hover:text-teal-700 flex items-center gap-1">
+                  View All <ChevronRight size={14} />
+                </Link>
+              </div>
+              <div className="divide-y divide-gray-50">
+                {alerts.pendingLeaves.length > 0 ? (
+                  alerts.pendingLeaves.map((leave, idx) => (
+                    <div key={idx} className="px-4 py-3 flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-gray-900 text-sm">{leave.employee}</p>
+                        <p className="text-xs text-gray-500 capitalize">{leave.type.replace('_', ' ')}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-gray-700">{leave.dates}</p>
+                        <p className="text-xs text-gray-500">{leave.days} days</p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-4 py-8 text-center text-gray-500 text-sm">
+                    No pending leave requests
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Employee Grid/List */}
-          {viewMode === 'grid' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {filteredEmployees.map((employee, index) => (
-                <div
-                  key={employee.id}
-                  style={{ animationDelay: `${index * 50}ms` }}
-                  className="animate-fade-in"
-                  {...(index === 0 ? { 'data-tour': 'employee-card' } : {})}
-                >
-                  <EmployeeCard
-                    employee={employee}
-                    onView={(emp) => setSelectedEmployee(emp)}
-                    onEdit={(emp) => console.log('Edit:', emp)}
+          {/* Charts Row */}
+          <div data-tour="dashboard-charts" className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            {/* Headcount by Department */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <h3 className="font-semibold text-gray-900 mb-4">Headcount by Department</h3>
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={chartData.departmentData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={80}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {chartData.departmentData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => [`${value} employees`, 'Count']} />
+                  <Legend
+                    layout="vertical"
+                    align="right"
+                    verticalAlign="middle"
+                    iconType="circle"
+                    iconSize={8}
+                    formatter={(value) => <span className="text-xs text-gray-600">{value}</span>}
                   />
-                </div>
-              ))}
+                </PieChart>
+              </ResponsiveContainer>
             </div>
-          ) : (
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Employee</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Department</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Salary</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {filteredEmployees.map((employee) => (
-                    <tr key={employee.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center">
-                            <span className="text-white font-medium text-sm">
-                              {employee.personalInfo.firstName[0]}{employee.personalInfo.lastName[0]}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              {employee.personalInfo.firstName} {employee.personalInfo.lastName}
-                            </p>
-                            <p className="text-sm text-gray-500">{employee.employmentInfo.jobTitle}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{employee.employmentInfo.department}</td>
-                      <td className="px-4 py-3">
-                        <span className={`badge ${
-                          employee.employmentInfo.employmentStatus === 'active' ? 'badge-success' : 'badge-warning'
-                        } capitalize`}>
-                          {employee.employmentInfo.employmentStatus}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                        {formatCurrency(employee.compensation.totalPackage)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <button 
-                          onClick={() => setSelectedEmployee(employee)}
-                          className="text-teal-600 hover:text-teal-800 text-sm font-medium"
-                        >
-                          View Details
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
 
-          {/* Empty State */}
-          {filteredEmployees.length === 0 && (
-            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-              <Users size={48} className="mx-auto text-gray-300 mb-4" />
-              <h3 className="font-display font-semibold text-gray-900 mb-2">No employees found</h3>
-              <p className="text-gray-500 mb-4">
-                {filterDepartment !== 'all' 
-                  ? `No employees in ${filterDepartment} department.`
-                  : 'Get started by adding your first employee.'}
-              </p>
-              <button 
-                onClick={() => setShowAddForm(true)}
-                className="btn btn-primary"
-              >
-                Add Employee
-              </button>
+            {/* Payroll Trend */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <h3 className="font-semibold text-gray-900 mb-4">Payroll Trend (6 Months)</h3>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={chartData.payrollTrend}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#9ca3af" />
+                  <YAxis
+                    tick={{ fontSize: 12 }}
+                    stroke="#9ca3af"
+                    tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`}
+                  />
+                  <Tooltip
+                    formatter={(value) => [formatCurrency(value as number), 'Payroll']}
+                    contentStyle={{ fontSize: 12 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="amount"
+                    stroke="#0d9488"
+                    strokeWidth={2}
+                    dot={{ fill: '#0d9488', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
-          )}
+
+            {/* Leave Utilization */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <h3 className="font-semibold text-gray-900 mb-4">Leave Utilization (This Month)</h3>
+              <ResponsiveContainer width="100%" height={200}>
+                {chartData.leaveData.length > 0 ? (
+                  <BarChart data={chartData.leaveData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis type="number" tick={{ fontSize: 12 }} stroke="#9ca3af" />
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      tick={{ fontSize: 11 }}
+                      stroke="#9ca3af"
+                      width={80}
+                    />
+                    <Tooltip formatter={(value) => [`${value} days`, 'Days']} contentStyle={{ fontSize: 12 }} />
+                    <Bar dataKey="days" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+                    No leave data this month
+                  </div>
+                )}
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Quick Links & Today Snapshot */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Quick Links */}
+            <div data-tour="dashboard-quicklinks" className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-4">
+              <h3 className="font-semibold text-gray-900 mb-4">Quick Links</h3>
+              <div className="grid grid-cols-4 gap-3">
+                {quickLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 hover:border-teal-200 hover:bg-teal-50 transition-colors group"
+                  >
+                    <div className={`w-12 h-12 ${link.color} rounded-xl flex items-center justify-center text-white group-hover:scale-110 transition-transform`}>
+                      <link.icon size={24} />
+                    </div>
+                    <span className="text-sm font-medium text-gray-700 group-hover:text-teal-700">
+                      {link.label}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Today Snapshot */}
+            <div data-tour="dashboard-snapshot" className="bg-white rounded-xl border border-gray-200 p-4">
+              <h3 className="font-semibold text-gray-900 mb-4">Today's Snapshot</h3>
+              <div className="space-y-4">
+                {/* On Leave Today */}
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <Calendar size={14} className="text-blue-500" />
+                    On Leave Today ({alerts.onLeaveToday.length})
+                  </div>
+                  {alerts.onLeaveToday.length > 0 ? (
+                    <div className="space-y-1">
+                      {alerts.onLeaveToday.map((item, idx) => (
+                        <div key={idx} className="text-sm text-gray-600 pl-5">
+                          {item.employee}
+                          <span className="text-gray-400 text-xs ml-1 capitalize">
+                            ({item.type.replace('_', ' ')})
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-400 pl-5">No one on leave</p>
+                  )}
+                </div>
+
+                {/* Birthdays This Week */}
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <Cake size={14} className="text-pink-500" />
+                    Birthdays This Week ({alerts.birthdaysThisWeek.length})
+                  </div>
+                  {alerts.birthdaysThisWeek.length > 0 ? (
+                    <div className="space-y-1">
+                      {alerts.birthdaysThisWeek.map((item, idx) => (
+                        <div key={idx} className="text-sm text-gray-600 pl-5">
+                          {item.employee}
+                          <span className="text-gray-400 text-xs ml-1">({item.date})</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-400 pl-5">No birthdays this week</p>
+                  )}
+                </div>
+
+                {/* Probation Endings */}
+                <div>
+                  <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                    <Briefcase size={14} className="text-amber-500" />
+                    Probation Endings ({alerts.probationEndings.length})
+                  </div>
+                  {alerts.probationEndings.length > 0 ? (
+                    <div className="space-y-1">
+                      {alerts.probationEndings.map((item, idx) => (
+                        <div key={idx} className="text-sm text-gray-600 pl-5">
+                          {item.employee}
+                          <span className="text-gray-400 text-xs ml-1">
+                            ({item.daysLeft} days)
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-400 pl-5">No probations ending soon</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </main>
-
-      {/* Modals */}
-      {selectedEmployee && (
-        <EmployeeDetailModal
-          employee={selectedEmployee}
-          onClose={() => setSelectedEmployee(null)}
-          onEdit={() => console.log('Edit employee')}
-        />
-      )}
-
-      {showAddForm && (
-        <AddEmployeeForm
-          onClose={() => setShowAddForm(false)}
-          onSubmit={handleAddEmployee}
-        />
-      )}
-
-      {/* Onboarding Tours */}
-      <OnboardingTour tourKey="welcome" autoStart />
-      <OnboardingTour tourKey="employees" />
     </div>
   );
 }

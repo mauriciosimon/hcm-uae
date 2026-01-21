@@ -216,7 +216,7 @@ export default function PayrollPage() {
           </div>
 
           {/* Actions Bar */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+          <div data-tour="payroll-workflow" className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div className="flex items-center gap-3 flex-wrap">
                 {/* Month/Year Selector */}
@@ -245,6 +245,7 @@ export default function PayrollPage() {
 
                 {/* Calculate Button */}
                 <button
+                  data-tour="run-payroll"
                   onClick={handleCalculatePayroll}
                   className="btn btn-primary flex items-center gap-2"
                 >
@@ -286,6 +287,7 @@ export default function PayrollPage() {
                 {/* Generate WPS */}
                 {payrollRun && payrollRun.status === 'approved' && (
                   <button
+                    data-tour="wps-download"
                     onClick={handleGenerateWPS}
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >

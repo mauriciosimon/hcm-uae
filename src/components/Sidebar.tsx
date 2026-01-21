@@ -2,20 +2,21 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { 
-  Users, 
-  Calendar, 
-  DollarSign, 
-  Award, 
-  FileText, 
-  Clock, 
-  BarChart3, 
+import {
+  Users,
+  Calendar,
+  DollarSign,
+  Award,
+  FileText,
+  Clock,
+  BarChart3,
   Settings,
   ChevronLeft,
   ChevronRight,
   Building2,
   Bell,
-  Menu
+  Menu,
+  Home
 } from 'lucide-react';
 
 interface NavItem {
@@ -26,7 +27,8 @@ interface NavItem {
 }
 
 const navigation: NavItem[] = [
-  { name: 'Employees', href: '/', icon: <Users size={20} /> },
+  { name: 'Dashboard', href: '/', icon: <Home size={20} /> },
+  { name: 'Employees', href: '/employees', icon: <Users size={20} /> },
   { name: 'Leave Management', href: '/leave', icon: <Calendar size={20} /> },
   { name: 'Payroll', href: '/payroll', icon: <DollarSign size={20} /> },
   { name: 'Gratuity', href: '/gratuity', icon: <Award size={20} /> },
@@ -38,7 +40,7 @@ const navigation: NavItem[] = [
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const [activeItem, setActiveItem] = useState('Employees');
+  const [activeItem, setActiveItem] = useState('Dashboard');
 
   return (
     <aside

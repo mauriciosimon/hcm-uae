@@ -29,7 +29,6 @@ import {
 } from 'lucide-react';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
-import OnboardingTour from '@/components/OnboardingTour';
 import { useTour } from '@/contexts/TourContext';
 import {
   CompanyProfile,
@@ -179,8 +178,6 @@ export default function SettingsPage() {
         />
       )}
 
-      {/* Onboarding Tour */}
-      <OnboardingTour tourKey="settings" />
     </div>
   );
 }

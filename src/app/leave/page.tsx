@@ -7,7 +7,6 @@ import StatsCard from '@/components/StatsCard';
 import LeaveBalanceCard from '@/components/LeaveBalanceCard';
 import LeaveRequestForm, { LeaveRequestFormData } from '@/components/LeaveRequestForm';
 import LeaveRequestCard from '@/components/LeaveRequestCard';
-import OnboardingTour from '@/components/OnboardingTour';
 import { mockEmployees } from '@/lib/data';
 import { mockLeaveRequests, calculateLeaveBalance, calculateBusinessDays } from '@/lib/leaveData';
 import { LeaveRequest, LeaveStatus } from '@/types/leave';
@@ -341,8 +340,6 @@ export default function LeavePage() {
         />
       )}
 
-      {/* Onboarding Tour */}
-      <OnboardingTour tourKey="leave" />
     </div>
   );
 }

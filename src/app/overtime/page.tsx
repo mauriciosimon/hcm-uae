@@ -155,6 +155,7 @@ export default function OvertimePage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-3">
                 <button
+                  data-tour="add-overtime"
                   onClick={() => setShowEntryForm(true)}
                   className="btn btn-primary flex items-center gap-2"
                 >
@@ -163,7 +164,7 @@ export default function OvertimePage() {
                 </button>
 
                 {/* Ramadan Toggle */}
-                <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                <div data-tour="ramadan-toggle" className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
                   <Moon size={16} className={isRamadan ? 'text-purple-600' : 'text-gray-400'} />
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
@@ -228,7 +229,7 @@ export default function OvertimePage() {
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             {/* Overtime Table */}
-            <div className="xl:col-span-2">
+            <div data-tour="overtime-table" className="xl:col-span-2">
               <OvertimeTable
                 entries={filteredEntries}
                 employees={mockEmployees}

@@ -108,7 +108,7 @@ function GratuityPageContent() {
           {/* Main Content */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Calculator Form */}
-            <div>
+            <div data-tour="gratuity-form">
               <GratuityCalculatorForm
                 employees={mockEmployees}
                 onCalculate={handleCalculate}
@@ -116,7 +116,7 @@ function GratuityPageContent() {
               />
 
               {/* Quick Links to Employees */}
-              <div className="mt-4 bg-white rounded-xl border border-gray-200 p-4">
+              <div data-tour="quick-calculate" className="mt-4 bg-white rounded-xl border border-gray-200 p-4">
                 <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
                   <Users size={16} className="text-gray-500" />
                   Quick Calculate for Employees

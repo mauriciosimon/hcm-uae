@@ -220,7 +220,7 @@ export default function DocumentsPage() {
           </div>
 
           {/* Quick Filters */}
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div data-tour="expiry-alerts" className="flex flex-wrap gap-2 mb-4">
             {[
               { key: 'all', label: 'All Documents', count: allDocuments.length },
               {
@@ -270,7 +270,7 @@ export default function DocumentsPage() {
           </div>
 
           {/* Actions Bar */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+          <div data-tour="document-filters" className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div className="flex items-center gap-3 flex-wrap">
                 {/* Search */}
@@ -461,6 +461,7 @@ export default function DocumentsPage() {
                   key={doc.id}
                   style={{ animationDelay: `${index * 30}ms` }}
                   className="animate-fade-in"
+                  {...(index === 0 ? { 'data-tour': 'document-card' } : {})}
                 >
                   <DocumentCard
                     document={doc}

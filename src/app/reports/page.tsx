@@ -194,7 +194,7 @@ export default function ReportsPage() {
                 </div>
 
                 {/* Category Filter */}
-                <div className="card p-4">
+                <div data-tour="report-categories" className="card p-4">
                   <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
                     <Filter size={16} />
                     Categories
@@ -357,7 +357,7 @@ export default function ReportsPage() {
             </div>
           ) : (
             // Templates Tab
-            <div>
+            <div data-tour="templates">
               {/* Search */}
               <div className="mb-6 max-w-md">
                 <div className="relative">

@@ -7,11 +7,13 @@ import { usePathname } from 'next/navigation';
 interface HeaderProps {
   title: string;
   subtitle?: string;
+  children?: React.ReactNode;
 }
 
 // Map pathname to tour key
 const pathToTourKey: Record<string, keyof TourStatus> = {
-  '/': 'employees',
+  '/': 'welcome',
+  '/employees': 'employees',
   '/leave': 'leave',
   '/gratuity': 'gratuity',
   '/overtime': 'overtime',
@@ -21,12 +23,12 @@ const pathToTourKey: Record<string, keyof TourStatus> = {
   '/settings': 'settings',
 };
 
-export default function Header({ title, subtitle }: HeaderProps) {
+export default function Header({ title, subtitle, children }: HeaderProps) {
   const { startTour } = useTour();
   const pathname = usePathname();
 
   const handleTakeTour = () => {
-    const tourKey = pathToTourKey[pathname] || 'employees';
+    const tourKey = pathToTourKey[pathname] || 'welcome';
     startTour(tourKey);
   };
 
@@ -34,9 +36,12 @@ export default function Header({ title, subtitle }: HeaderProps) {
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
         {/* Title Section */}
-        <div>
-          <h1 className="font-display text-2xl font-bold text-gray-900">{title}</h1>
-          {subtitle && <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>}
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="font-display text-2xl font-bold text-gray-900">{title}</h1>
+            {subtitle && <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>}
+          </div>
+          {children}
         </div>
 
         {/* Actions Section */}
