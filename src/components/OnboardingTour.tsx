@@ -478,6 +478,15 @@ export default function OnboardingTour() {
   const [run, setRun] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Handler to finish the tour
   const handleFinishTour = useCallback(() => {
@@ -533,11 +542,15 @@ export default function OnboardingTour() {
     }
 
     if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
+      // Get current filtered steps based on mobile state
+      const currentSteps = isMobile 
+        ? UNIFIED_TOUR_STEPS.filter(step => !step.target.toString().includes('sidebar'))
+        : UNIFIED_TOUR_STEPS;
       const nextIndex = index + (action === ACTIONS.PREV ? -1 : 1);
 
-      if (nextIndex >= 0 && nextIndex < UNIFIED_TOUR_STEPS.length) {
-        const nextStep = UNIFIED_TOUR_STEPS[nextIndex];
-        const currentStep = UNIFIED_TOUR_STEPS[index];
+      if (nextIndex >= 0 && nextIndex < currentSteps.length) {
+        const nextStep = currentSteps[nextIndex];
+        const currentStep = currentSteps[index];
 
         // Check if we need to navigate to a different page
         if (nextStep.path && nextStep.path !== currentStep?.path) {
@@ -556,9 +569,14 @@ export default function OnboardingTour() {
   if (!isTourActive) return null;
 
   // Get steps for current path (filter out path property for Joyride)
+  // On mobile, skip steps that target the sidebar (hidden on mobile)
+  const filteredSteps = isMobile 
+    ? UNIFIED_TOUR_STEPS.filter(step => !step.target.toString().includes('sidebar'))
+    : UNIFIED_TOUR_STEPS;
+  
   // Replace the finish step placeholder with actual content
-  const steps: Step[] = UNIFIED_TOUR_STEPS.map(({ path, ...step }, index) => {
-    if (index === UNIFIED_TOUR_STEPS.length - 1) {
+  const steps: Step[] = filteredSteps.map(({ path, ...step }, index) => {
+    if (index === filteredSteps.length - 1) {
       return {
         ...step,
         content: <FinishStepContent onFinish={handleFinishTour} />,
@@ -588,38 +606,43 @@ export default function OnboardingTour() {
           backgroundColor: '#fff',
           overlayColor: 'rgba(0, 0, 0, 0.6)',
           textColor: '#1f2937',
+          width: '100%',
         },
         spotlight: {
           borderRadius: 8,
         },
         tooltip: {
           borderRadius: 12,
-          padding: 20,
-          maxWidth: 380,
+          padding: 16,
+          maxWidth: 'min(380px, calc(100vw - 32px))',
+          width: 'auto',
         },
         tooltipContainer: {
           textAlign: 'left',
         },
         tooltipTitle: {
-          fontSize: 18,
+          fontSize: 16,
           fontWeight: 600,
         },
         tooltipContent: {
-          padding: '10px 0',
+          padding: '8px 0',
+          fontSize: 14,
         },
         buttonNext: {
           backgroundColor: '#0d9488',
           borderRadius: 8,
-          padding: '10px 20px',
+          padding: '8px 16px',
           fontSize: 14,
           fontWeight: 500,
         },
         buttonBack: {
           color: '#6b7280',
-          marginRight: 10,
+          marginRight: 8,
+          fontSize: 14,
         },
         buttonSkip: {
           color: '#9ca3af',
+          fontSize: 14,
         },
         buttonClose: {
           display: 'none',
